@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -18,14 +20,35 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	squishedtext := compress(plaintext)
+
 	//	fmt.Printf("%s\n", plaintext)
-	ciphertext, err := encrypt(key, plaintext)
+	ciphertext, err := encrypt(key, squishedtext)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Printf("%0x\n", ciphertext)
 
+}
+
+func compress(input []byte) []byte {
+	var b bytes.Buffer
+	gz, err := gzip.NewWriterLevel(&b, gzip.BestCompression)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if _, err := gz.Write(input); err != nil {
+		log.Fatal(err)
+	}
+	if err := gz.Flush(); err != nil {
+		log.Fatal(err)
+	}
+	if err := gz.Close(); err != nil {
+		log.Fatal(err)
+	}
+	return b.Bytes()
 }
 
 func encrypt(key, text []byte) ([]byte, error) {
